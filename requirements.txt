@@ -2,5 +2,4 @@ numpy
 pandas
 matplotlib
 scikit-learn
-tensorflow
-keras
+keras==2.9.0
