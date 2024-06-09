@@ -10,7 +10,7 @@ from keras.layers import Dense, Dropout, LSTM, GRU, Bidirectional
 from keras.optimizers import SGD
 from sklearn.metrics import mean_squared_error
 from sklearn.svm import SVR
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 
 @st.cache(allow_output_mutation=True)
 
