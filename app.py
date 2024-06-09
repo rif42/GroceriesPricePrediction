@@ -87,11 +87,11 @@ def process_model(model):
   
 
 #load model using pickle
-with open('LSTM.pkl', 'rb') as f:
-    lstm_model = pickle.load(f)
+# with open('LSTM.pkl', 'rb') as f:
+#     lstm_model = pickle.load(f)
     
-with open('GRU.pkl', 'rb') as f:
-    gru_model = pickle.load(f)
+# with open('GRU.pkl', 'rb') as f:
+#     gru_model = pickle.load(f)
 
 dataset = pd.read_excel('grocery_price.xlsx', index_col=None)
 st.title("Grocery Price Prediction")
@@ -111,10 +111,12 @@ st.pyplot(visualized)
 selection = st.selectbox("Pilih Model", ["LSTM", "GRU"])
 if st.button("Mulai Prediksi"):
     if selection == "LSTM":
+      lstm_model = load_model('LSTM.h5')
       result = process_model(lstm_model)
       st.pyplot(result)
 
     elif selection == "GRU":
+      gru = load_model('GRU.h5')
       result = process_model(gru_model)
       st.pyplot(result)
 
