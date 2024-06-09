@@ -83,8 +83,8 @@ def process_model(model):
   return plt
   
 
-lstm_model = load_model('LSTM.h5')
-gru_model = load_model('GRU.h5')
+lstm_model = load_model('./LSTM.h5')
+gru_model = load_model('./GRU.h5')
 
 dataset = pd.read_excel('grocery_price.xlsx', index_col=None)
 st.title("Grocery Price Prediction")
