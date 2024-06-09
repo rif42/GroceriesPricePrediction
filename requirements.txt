@@ -6,3 +6,7 @@ tensorflow
 keras==2.9.0
 protobuf==3.20.3
 openpyxl
+tensorflow-addons==0.22.0
+tensorflow-estimator==2.15.0
+tensorflow-intel==2.11.0
+tensorflow-io-gcs-filesystem==0.28.0
