@@ -11,6 +11,7 @@ from keras.optimizers import SGD
 from sklearn.metrics import mean_squared_error
 from sklearn.svm import SVR
 from tensorflow.keras.models import load_model
+import pickle
 
 @st.cache(allow_output_mutation=True)
 
@@ -85,8 +86,12 @@ def process_model(model):
   return plt
   
 
-lstm_model = load_model('./LSTM.h5', compile=False)
-gru_model = load_model('./GRU.h5', compile=False)
+#load model using pickle
+with open('LSTM.pkl', 'rb') as f:
+    lstm_model = pickle.load(f)
+    
+with open('GRU.pkl', 'rb') as f:
+    gru_model = pickle.load(f)
 
 dataset = pd.read_excel('grocery_price.xlsx', index_col=None)
 st.title("Grocery Price Prediction")
