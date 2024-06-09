@@ -12,6 +12,8 @@ from sklearn.metrics import mean_squared_error
 from sklearn.svm import SVR
 from keras.models import load_model
 
+@st.cache(allow_output_mutation=True)
+
 def preprocess_data(dataset):
     dataset = dataset.T
     dataset.columns = dataset.iloc[0]
@@ -83,8 +85,8 @@ def process_model(model):
   return plt
   
 
-lstm_model = load_model('./LSTM.h5')
-gru_model = load_model('./GRU.h5')
+lstm_model = load_model('./LSTM.h5', compile=False)
+gru_model = load_model('./GRU.h5', compile=False)
 
 dataset = pd.read_excel('grocery_price.xlsx', index_col=None)
 st.title("Grocery Price Prediction")
