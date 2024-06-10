@@ -15,7 +15,6 @@ import pickle
 import openpyxl
 import tensorflow
 from sklearn.metrics import mean_squared_error, r2_score
-import plotly.express as px
 import plotly.graph_objects as go
 
 @st.cache(allow_output_mutation=True)

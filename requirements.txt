@@ -6,3 +6,4 @@ tensorflow
 keras==2.9.0
 protobuf==3.20.3
 openpyxl
+plotly
