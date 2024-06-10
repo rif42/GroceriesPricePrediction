@@ -112,12 +112,12 @@ st.pyplot(visualized)
 selection = st.selectbox("Pilih Model", ["LSTM", "GRU"])
 if st.button("Mulai Prediksi"):
     if selection == "LSTM":
-      lstm_model = tf.keras.models.load_model('LSTM.h5', compile=False)
+      lstm_model = tensorflow.keras.models.load_model('LSTM.h5', compile=False)
       result = process_model(lstm_model)
       st.pyplot(result)
 
     elif selection == "GRU":
-      gru_model = tf.keras.models.load_model('GRU.h5', compile=False)
+      gru_model = tensorflow.keras.models.load_model('GRU.h5', compile=False)
       result = process_model(gru_model)
       st.pyplot(result)
 
