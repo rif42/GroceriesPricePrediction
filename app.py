@@ -14,6 +14,9 @@ from tensorflow.keras.models import load_model
 import pickle
 import openpyxl
 import tensorflow
+from sklearn.metrics import mean_squared_error, r2_score
+import plotly.express as px
+import plotly.graph_objects as go
 
 @st.cache(allow_output_mutation=True)
 
@@ -47,9 +50,13 @@ def visualize_initial(dataset):
   plt.legend()
   return plt
 
+def plotlytest(dataset):
+  fig = px.line(dataset, x=dataset.index, y='Average', title='Grocery Price Prediction')
+  return fig
+
 def process_model(model):
-  dataset = pd.read_excel('grocery_price.xlsx', index_col=None)
-  dataset = dataset.T
+  rawdataset = pd.read_excel('grocery_price.xlsx', index_col=None)
+  dataset = rawdataset.T
   dataset.columns = dataset.iloc[0]
   dataset = dataset.drop(dataset.index[0])
   dataset['Average'] = round(dataset.mean(axis=1),2)
@@ -72,28 +79,21 @@ def process_model(model):
   # Predict the stock price
   predicted_stock_price = model.predict(x_test)
   predicted_stock_price = sc.inverse_transform(predicted_stock_price)
+  # round the values to 2 decimal places
+  predicted_stock_price = np.round(predicted_stock_price,2)
   
-  # Visualizing the result
-  date_range = pd.date_range(start='2021-03-10', periods=len(dataset), freq='D')  # 'B' for business day frequency
-  plt.figure(figsize=(10, 6))
-  plt.plot(date_range[60:], dataset[60:], color='black', label='SPY Stock Price')
-  plt.plot(date_range[60:], predicted_stock_price, color='green', label='Predicted SPY Stock Price')
-  plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=6))
-  plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
-  plt.title('SPY Stock Price Prediction')
-  plt.xlabel('Time')
-  plt.ylabel('SPY Stock Price')
-  plt.legend()
-  plt.show()
-  return plt
-  
+  newdataset = preprocess_data(rawdataset)
+  newdataset = newdataset[60:]
+  newchart = newdataset.copy()
+  newchart['Predicted'] = predicted_stock_price
 
-#load model using pickle
-# with open('LSTM.pkl', 'rb') as f:
-#     lstm_model = pickle.load(f)
-    
-# with open('GRU.pkl', 'rb') as f:
-#     gru_model = pickle.load(f)
+  fig = go.Figure()
+  fig.add_trace(go.Scatter(x=newchart.index, y=newchart['Average'], mode='lines', name='Grocery Price', line=dict(color='red')))
+  fig.add_trace(go.Scatter(x=newchart.index, y=newchart['Predicted'], mode='lines', name='Predicted Grocery Price', line=dict(color='green')))
+  
+  mse = mean_squared_error(dataset[60:], predicted_stock_price)
+  r2 = r2_score(dataset[60:], predicted_stock_price)
+  return fig,mse,r2
 
 dataset = pd.read_excel('grocery_price.xlsx', index_col=None)
 st.title("Grocery Price Prediction")
@@ -110,17 +110,25 @@ st.write("Dataset Visualization:")
 visualized = visualize_initial(preprocessed)
 st.pyplot(visualized)
 
+plottest = plotlytest(preprocessed)
+st.plotly_chart(plottest)
+
 selection = st.selectbox("Pilih Model", ["LSTM", "GRU"])
 if st.button("Mulai Prediksi"):
     if selection == "LSTM":
       lstm_model = tensorflow.keras.models.load_model('LSTM.h5', compile=False)
-      result = process_model(lstm_model)
-      st.pyplot(result)
+      result,mse,r2 = process_model(lstm_model)
+      st.plotly_chart(result)
+      st.write("MSE: ", mse)
+      st.write("Accuracy: ", r2)
+      
 
     elif selection == "GRU":
       gru_model = tensorflow.keras.models.load_model('GRU.h5', compile=False)
-      result = process_model(gru_model)
-      st.pyplot(result)
+      result,mse,r2 = process_model(gru_model)
+      st.plotly_chart(result)
+      st.write("MSE: ", mse)
+      st.write("Accuracy: ", r2)
 
 
 
