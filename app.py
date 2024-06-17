@@ -76,7 +76,7 @@ def process_model(model):
   x_test, y_test = create_sequences(scaled_dataset)
   x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
   
-  if (model.contains('SVR')):
+  if selection == "SVR":
     x_pred = x_test.reshape(x_test.shape[0], x_test.shape[1])
     predicted_stock_price = model.predict(x_pred)
     index = np.arange(len(predicted_stock_price))
