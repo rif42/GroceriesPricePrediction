@@ -76,23 +76,35 @@ def process_model(model):
   x_test, y_test = create_sequences(scaled_dataset)
   x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
   
-  # Predict the stock price
-  predicted_stock_price = model.predict(x_test)
-  predicted_stock_price = sc.inverse_transform(predicted_stock_price)
-  # round the values to 2 decimal places
-  predicted_stock_price = np.round(predicted_stock_price,2)
-  
-  newdataset = preprocess_data(rawdataset)
-  newdataset = newdataset[60:]
-  newchart = newdataset.copy()
-  newchart['Predicted'] = predicted_stock_price
+  if (model.contains('SVR')):
+    x_pred = x_test.reshape(x_test.shape[0], x_test.shape[1])
+    predicted_stock_price = model.predict(x_pred)
+    index = np.arange(len(predicted_stock_price))
+    predicted_stock_price = np.column_stack((index, predicted_stock_price))
+    y_test = np.column_stack((index, y_test))
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=y_test[:,0], y=y_test[:,1], mode='lines', name='Grocery Price', line=dict(color='red')))
+    fig.add_trace(go.Scatter(x=predicted_stock_price[:,0], y=predicted_stock_price[:,1], mode='lines', name='Predicted Grocery Price', line=dict(color='green')))
+    mse = mean_squared_error(y_test, predicted_stock_price)
+    r2 = r2_score(y_test, predicted_stock_price)
+  else:
+    # Predict the stock price
+    predicted_stock_price = model.predict(x_test)
+    predicted_stock_price = sc.inverse_transform(predicted_stock_price)
+    # round the values to 2 decimal places
+    predicted_stock_price = np.round(predicted_stock_price,2)
+    
+    newdataset = preprocess_data(rawdataset)
+    newdataset = newdataset[60:]
+    newchart = newdataset.copy()
+    newchart['Predicted'] = predicted_stock_price
 
-  fig = go.Figure()
-  fig.add_trace(go.Scatter(x=newchart.index, y=newchart['Average'], mode='lines', name='Grocery Price', line=dict(color='red')))
-  fig.add_trace(go.Scatter(x=newchart.index, y=newchart['Predicted'], mode='lines', name='Predicted Grocery Price', line=dict(color='green')))
-  
-  mse = mean_squared_error(dataset[60:], predicted_stock_price)
-  r2 = r2_score(dataset[60:], predicted_stock_price)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=newchart.index, y=newchart['Average'], mode='lines', name='Grocery Price', line=dict(color='red')))
+    fig.add_trace(go.Scatter(x=newchart.index, y=newchart['Predicted'], mode='lines', name='Predicted Grocery Price', line=dict(color='green')))
+    
+    mse = mean_squared_error(dataset[60:], predicted_stock_price)
+    r2 = r2_score(dataset[60:], predicted_stock_price)
   return fig,mse,r2
 
 dataset = pd.read_excel('grocery_price.xlsx', index_col=None)
@@ -113,7 +125,7 @@ st.pyplot(visualized)
 plottest = plotlytest(preprocessed)
 st.plotly_chart(plottest)
 
-selection = st.selectbox("Pilih Model", ["LSTM", "GRU"])
+selection = st.selectbox("Pilih Model", ["LSTM", "GRU", "SVR"])
 if st.button("Mulai Prediksi"):
     if selection == "LSTM":
       lstm_model = tensorflow.keras.models.load_model('LSTM.h5', compile=False)
@@ -130,7 +142,10 @@ if st.button("Mulai Prediksi"):
       st.write("MSE: ", mse)
       st.write("Accuracy: ", r2)
 
-
-
-
-
+    elif selection == "SVR":
+          with open('SVR.pkl', 'rb') as f:
+            svr_model = pickle.load(f)
+          result,mse,r2 = process_model(svr_model)
+          st.plotly_chart(result)
+          st.write("MSE: ", mse)
+          st.write("Accuracy: ", r2)
