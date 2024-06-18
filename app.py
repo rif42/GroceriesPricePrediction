@@ -35,37 +35,34 @@ def dataset_split(dataset):
     train_data = train_data.values
     validation_data = validation_data.values
     return train_data, validation_data, test_data
-  
-def visualize_initial(dataset):
-  # Prepare dates for the predicted stock prices
-  date_range = pd.date_range(start='2021-03-10', periods=len(dataset), freq='D')  # 'B' for business day frequency
-  # Visualizing Results with Month and Year on X-axis
-  plt.figure(figsize=(10, 6))
-  plt.plot(date_range, dataset['Average'], color='black', label='Grocery Price')
-  plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=6))  # Show tick marks for every 3 months
-  plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))  # Format x-axis labels as 'Jan 2023', 'Feb 2023', etc.
-  plt.title('Grocery Price Prediction')
-  plt.xlabel('Time')
-  plt.ylabel('Grocery Price')
-  plt.legend()
-  return plt
 
 def plotlytest(dataset):
   fig = px.line(dataset, x=dataset.index, y='Average', title='Grocery Price Prediction')
   return fig
 
 def process_model(model):
+  # import raw dataset and transform
   rawdataset = pd.read_excel('grocery_price.xlsx', index_col=None)
   dataset = rawdataset.T
   dataset.columns = dataset.iloc[0]
   dataset = dataset.drop(dataset.index[0])
   dataset['Average'] = round(dataset.mean(axis=1),2)
+  
+  # get original value for graphing later
+  original = dataset.drop(dataset.columns[0:3], axis=1)
+  original.reset_index(inplace=True)
+  original = original.rename(columns={'index':'Date'})
+  original = original.values[0:963]
+  
+  # get values for prediction
   dataset = dataset.drop(dataset.columns[0:3], axis=1)
   dataset = dataset.values
   
+  # scale dataset with minmaxscaler
   sc = MinMaxScaler(feature_range=(0,1))
   scaled_dataset = sc.fit_transform(dataset)
   
+  # create sequences/chunks for prediction
   def create_sequences(data, seq_length=60):
     x=[]
     y=[]
@@ -78,19 +75,25 @@ def process_model(model):
   
   if selection == "SVR":
     x_pred = x_test.reshape(x_test.shape[0], x_test.shape[1])
-    predicted_stock_price = model.predict(x_pred)
-    index = np.arange(len(predicted_stock_price))
-    predicted_stock_price = np.column_stack((index, predicted_stock_price))
-    y_test = np.column_stack((index, y_test))
+    predicted_price = model.predict(x_pred)
+    predicted_price = sc.inverse_transform(predicted_price.reshape(-1,1))
+    
+    index = np.arange(len(predicted_price))
+    predicted_price_acc = np.column_stack((index, predicted_price))
+    original_acc = np.column_stack((index, original[:,1]))
+    
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=y_test[:,0], y=y_test[:,1], mode='lines', name='Grocery Price', line=dict(color='red')))
-    fig.add_trace(go.Scatter(x=predicted_stock_price[:,0], y=predicted_stock_price[:,1], mode='lines', name='Predicted Grocery Price', line=dict(color='green')))
-    mse = mean_squared_error(y_test, predicted_stock_price)
-    r2 = r2_score(y_test, predicted_stock_price)
+    fig.add_trace(go.Scatter(x=original[:,0], y=original[:,1], mode='lines', name='Grocery Price', line=dict(color='red')))
+    fig.add_trace(go.Scatter(x=original[:,0], y=predicted_price[:,0], mode='lines', name='Predicted Grocery Price', line=dict(color='green')))
+    
+    mse = mean_squared_error(original_acc, predicted_price_acc)
+    r2 = r2_score(original_acc, predicted_price_acc)
   else:
+    
     # Predict the stock price
     predicted_stock_price = model.predict(x_test)
     predicted_stock_price = sc.inverse_transform(predicted_stock_price)
+    
     # round the values to 2 decimal places
     predicted_stock_price = np.round(predicted_stock_price,2)
     
@@ -119,8 +122,8 @@ preprocessed = preprocess_data(dataset)
 st.write(preprocessed)
 
 st.write("Dataset Visualization:")
-visualized = visualize_initial(preprocessed)
-st.pyplot(visualized)
+# visualized = visualize_initial(preprocessed)
+# st.pyplot(visualized)
 
 plottest = plotlytest(preprocessed)
 st.plotly_chart(plottest)
