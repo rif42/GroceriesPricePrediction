@@ -131,7 +131,9 @@ st.plotly_chart(plottest)
 selection = st.selectbox("Pilih Model", ["LSTM", "GRU", "SVR"])
 if st.button("Mulai Prediksi"):
     if selection == "LSTM":
-      lstm_model = tensorflow.keras.models.load_model('LSTM.h5', compile=False)
+      # lstm_model = tensorflow.keras.models.load_model('LSTM.h5', compile=False)
+      with open('LSTM.pkl', 'rb') as f:
+        lstm_model = pickle.load(f)
       result,mse,r2 = process_model(lstm_model)
       st.plotly_chart(result)
       st.write("MSE: ", mse)
@@ -139,16 +141,18 @@ if st.button("Mulai Prediksi"):
       
 
     elif selection == "GRU":
-      gru_model = tensorflow.keras.models.load_model('GRU.h5', compile=False)
+      # gru_model = tensorflow.keras.models.load_model('GRU.h5', compile=False)
+      with open('GRU.pkl', 'rb') as f:
+        gru_model = pickle.load(f)
       result,mse,r2 = process_model(gru_model)
       st.plotly_chart(result)
       st.write("MSE: ", mse)
       st.write("Accuracy: ", r2)
 
     elif selection == "SVR":
-          with open('SVR.pkl', 'rb') as f:
-            svr_model = pickle.load(f)
-          result,mse,r2 = process_model(svr_model)
-          st.plotly_chart(result)
-          st.write("MSE: ", mse)
-          st.write("Accuracy: ", r2)
+      with open('SVR.pkl', 'rb') as f:
+        svr_model = pickle.load(f)
+      result,mse,r2 = process_model(svr_model)
+      st.plotly_chart(result)
+      st.write("MSE: ", mse)
+      st.write("Accuracy: ", r2)
